@@ -1,5 +1,6 @@
 ﻿using MagicVilla_API.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace MagicVilla_API.Data
 {
@@ -10,6 +11,10 @@ namespace MagicVilla_API.Data
         }
 
         public DbSet<Villa> Villas { get; set; }
+
+        public DbSet<User> Users { get; set; }
+
+        public DbSet<RefreshTokenLogic> RefreshTokenLogics { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -78,6 +83,10 @@ namespace MagicVilla_API.Data
               }
 
              );
+
+            modelBuilder.Entity<User>().HasData(
+                    new User { Id = 1, Name = "Yu", Email="alpha@gmail.com", Password="123456789", Phone="", IsActive= true, Role="admin" }
+                );
         }
     }
 }

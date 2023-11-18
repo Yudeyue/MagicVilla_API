@@ -1,9 +1,15 @@
-﻿using MagicVilla_API.Data;
+﻿using ClosedXML.Excel;
+using MagicVilla_API.Data;
 using MagicVilla_API.Models;
 using MagicVilla_API.Models.Dto;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Data;
 
 namespace MagicVilla_API.Controllers
 {
@@ -11,19 +17,28 @@ namespace MagicVilla_API.Controllers
     [Route("api/VillaAPI")]
     // ApiContriller support ModelState validation
     [ApiController]
+    //[EnableCors("CorsPolicy")]
+    //[DisableCors]
+    //[EnableRateLimiting("Fixed Window")]
+    //[Authorize]
+    //[AllowAnonymous] // cancel the authorized can be used for individual compoment
     public class VillaAPIController: ControllerBase
     {
         private readonly ApplicationDbContext _db;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
         public ILogger<VillaAPIController> _logger { get; }
 
-        public VillaAPIController(ApplicationDbContext db, ILogger<VillaAPIController> logger) 
+        public VillaAPIController(ApplicationDbContext db, ILogger<VillaAPIController> logger, IWebHostEnvironment webHostEnvironment) 
         {
             _db = db;
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<IEnumerable<VillaDTO>> GetVillas()
         {
             _logger.LogInformation("Getting all villas");
@@ -198,6 +213,61 @@ namespace MagicVilla_API.Controllers
             }
 
             return NoContent() ;    
+        }
+
+
+        // install package closedXML
+        [HttpGet("ExportExcelFile")]
+        public ActionResult ExportExcelFile()
+        {
+            var filePath = _webHostEnvironment.WebRootPath + "\\Export";
+            var excelFilePath = filePath + "\\Villas.xlsx";
+
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Id", typeof(int));
+            dt.Columns.Add("Name", typeof(string));
+            dt.Columns.Add("Details", typeof(string));
+            dt.Columns.Add("Rate", typeof(int));
+            dt.Columns.Add("Sqft", typeof(int));
+            dt.Columns.Add("Occupany", typeof(int));
+
+            var data = _db.Villas.ToList();
+
+            if (data != null && data.Count > 0)
+            {
+                data.ForEach(item =>
+                {
+                    dt.Rows.Add(item.Id,item.Name,item.Details,item.Rate,item.Sqft,item.Occupany);
+                });
+            }
+
+            try
+            {
+                using (XLWorkbook wb = new XLWorkbook())
+                {
+                    wb.AddWorksheet(dt, "Villas");
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        wb.SaveAs(stream);
+
+                        if (System.IO.File.Exists(excelFilePath))
+                        {
+                            System.IO.File.Delete(excelFilePath);
+                        }
+
+                        wb.SaveAs(excelFilePath);
+
+                        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Villas.xlsx");
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+            
         }
 
     }

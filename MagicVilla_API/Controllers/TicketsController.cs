@@ -6,7 +6,7 @@ namespace MagicVilla_API.Controllers
 {
     [ApiController]
     [Route("api/Tickets")]
-    [Version1DiscontinueResourceFilter] // Resource filter
+    //[Version1DiscontinueResourceFilter] // Resource filter
     public class TicketsController : ControllerBase
     {
         [HttpPost]
@@ -18,7 +18,7 @@ namespace MagicVilla_API.Controllers
 
         [HttpPost]
         [Route("/api/v2/tickets")]
-        [Ticket_EnsureEnterDate]// action filter new added feature
+        //[Ticket_EnsureEnterDate]// action filter new added feature
         public ActionResult<Ticket> PostV2([FromBody] Ticket ticket)
         {
             return Ok(ticket);

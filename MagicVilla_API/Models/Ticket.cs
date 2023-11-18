@@ -14,7 +14,7 @@ namespace MagicVilla_API.Models
         public DateTime? EnterDate { get; set; } = DateTime.Now;
         public string? Owner {  get; set; }
 
-        [Ticket_EnsureDueDateForTicketOwner]
+        //[Ticket_EnsureDueDateForTicketOwner]
         public DateTime? DueDate { get; set; }
 
         public bool ValidateFutureDueDate()
